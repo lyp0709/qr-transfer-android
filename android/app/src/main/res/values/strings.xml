@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">二维码转译工具</string>
+    <string name="scan_qr">扫描二维码</string>
+    <string name="stop_scan">停止扫描</string>
+    <string name="camera_permission_required">需要相机权限</string>
+    <string name="grant_permission">授予权限</string>
+    <string name="scanned_count">已扫描: %d / %d</string>
+    <string name="decode_complete">解码完成</string>
+    <string name="save_file">保存文件</string>
+    <string name="processing">处理中...</string>
+</resources>
