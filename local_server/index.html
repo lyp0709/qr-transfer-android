@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>本地二维码转译工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .upload-section {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f0ff;
+        }
+
+        .upload-section.dragover {
+            border-color: #764ba2;
+            background: #e8e8ff;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .upload-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .file-type-selector {
+            margin: 20px 0;
+        }
+
+        .file-type-selector label {
+            margin: 0 15px;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+
+        .qr-display {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .qr-item {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .qr-item img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            border: 2px solid #667eea;
+        }
+
+        .qr-item h3 {
+            margin-top: 15px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+            color: #666;
+        }
+
+        .control-buttons {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .clear-btn, .download-btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 0 10px;
+            font-size: 1em;
+            display: none;
+        }
+
+        .clear-btn {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .clear-btn:hover {
+            background: #ff5252;
+        }
+
+        .download-btn {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .download-btn:hover {
+            background: #45a049;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            margin-left: 20px;
+            color: #856404;
+        }
+
+        .instructions li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 本地二维码转译工具</h1>
+        <p class="subtitle">无网络文件传输解决方案</p>
+        
+        <div class="instructions">
+            <h3>📋 使用说明</h3>
+            <ol>
+                <li>拖拽文件到下方区域或点击选择文件</li>
+                <li>等待二维码生成完成</li>
+                <li>用手机APP依次扫描所有二维码</li>
+                <li>手机端自动保存文件</li>
+            </ol>
+        </div>
+        
+        <div class="upload-section" id="dropZone">
+            <h2>📁 拖拽文件到这里或点击上传</h2>
+            <p>支持单个文件或压缩包（.zip）</p>
+            
+            <div class="file-type-selector">
+                <label>
+                    <input type="radio" name="fileType" value="file" checked>
+                    单个文件
+                </label>
+                <label>
+                    <input type="radio" name="fileType" value="folder">
+                    文件夹（压缩为zip）
+                </label>
+            </div>
+            
+            <input type="file" id="fileInput">
+            <button class="upload-btn" onclick="document.getElementById('fileInput').click()">选择文件</button>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="status" id="status"></div>
+
+        <div class="qr-display" id="qrDisplay"></div>
+
+        <div class="control-buttons">
+            <button class="clear-btn" id="clearBtn" onclick="clearQR()">清除二维码</button>
+            <button class="download-btn" id="downloadBtn" onclick="downloadAll()">下载所有二维码</button>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '';  // 本地相对路径
+        let qrCount = 0;
+
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const qrDisplay = document.getElementById('qrDisplay');
+        const status = document.getElementById('status');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const clearBtn = document.getElementById('clearBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // 拖拽事件
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        async function handleFile(file) {
+            const fileType = document.querySelector('input[name="fileType"]:checked').value;
+            const isFolder = fileType === 'folder';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('is_folder', isFolder);
+
+            status.textContent = '正在处理文件...';
+            progressBar.classList.add('active');
+            progressFill.style.width = '30%';
+
+            try {
+                const response = await fetch(`${API_URL}/api/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    qrCount = result.total_qr;
+                    status.textContent = `✅ 成功生成 ${qrCount} 个二维码，请用手机扫描`;
+                    progressFill.style.width = '100%';
+                    
+                    displayQRCodes(result.total_qr);
+                    clearBtn.style.display = 'inline-block';
+                    downloadBtn.style.display = 'inline-block';
+                } else {
+                    status.textContent = `❌ 错误: ${result.error}`;
+                    progressBar.classList.remove('active');
+                }
+            } catch (error) {
+                status.textContent = `❌ 上传失败: ${error.message}`;
+                progressBar.classList.remove('active');
+            }
+        }
+
+        async function displayQRCodes(count) {
+            qrDisplay.innerHTML = '';
+            
+            for (let i = 0; i < count; i++) {
+                const qrItem = document.createElement('div');
+                qrItem.className = 'qr-item';
+                qrItem.innerHTML = `
+                    <img src="${API_URL}/api/qr/${i}" alt="QR Code ${i + 1}">
+                    <h3>二维码 ${i + 1} / ${count}</h3>
+                `;
+                qrDisplay.appendChild(qrItem);
+            }
+        }
+
+        async function clearQR() {
+            try {
+                await fetch(`${API_URL}/api/clear`, { method: 'POST' });
+                qrDisplay.innerHTML = '';
+                status.textContent = '';
+                progressBar.classList.remove('active');
+                clearBtn.style.display = 'none';
+                downloadBtn.style.display = 'none';
+                qrCount = 0;
+            } catch (error) {
+                status.textContent = `清除失败: ${error.message}`;
+            }
+        }
+
+        async function downloadAll() {
+            for (let i = 0; i < qrCount; i++) {
+                const link = document.createElement('a');
+                link.href = `${API_URL}/api/qr/${i}`;
+                link.download = `qr_${i}.png`;
+                link.click();
+            }
+        }
+    </script>
+</body>
+</html>
